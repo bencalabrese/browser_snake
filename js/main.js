@@ -1,5 +1,6 @@
-var Snake = require("./snake.js");
-var Coord = require("./coordinate.js");
+var SnakeView = require("./snake-view.js");
 
-window.Coord = Coord;
-window.Snake = Snake;
+$(function() {
+  var view = new SnakeView($("#snake-game"));
+  view.setup();
+});

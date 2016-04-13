@@ -44,11 +44,12 @@
 /* 0 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var Snake = __webpack_require__(1);
-	var Coord = __webpack_require__(2);
+	var SnakeView = __webpack_require__(3);
 	
-	window.Coord = Coord;
-	window.Snake = Snake;
+	$(function() {
+	  var view = new SnakeView($("#snake-game"));
+	  view.setup();
+	});
 
 
 /***/ },
@@ -113,6 +114,78 @@
 	};
 	
 	module.exports = Coord;
+
+
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Board = __webpack_require__(4);
+	
+	function SnakeView($rootEl, dimX, dimY) {
+	  this.$rootEl = $rootEl;
+	  this.board = new Board(dimX, dimY);
+	}
+	
+	SnakeView.prototype.setup = function() {
+	  for (var i = 0; i < this.board.dimY; i++) {
+	    var $row = $("<ul></ul>");
+	    $row.addClass("row group");
+	
+	    for (var j = 0; j < this.board.dimX; j++) {
+	      var $square = $("<li></li>");
+	      $square.addClass("square");
+	      $square.attr("data-pos", [j, i]);
+	      $row.append($square);
+	    }
+	
+	    this.$rootEl.append($row);
+	  }
+	};
+	
+	
+	module.exports = SnakeView;
+
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Snake = __webpack_require__(1);
+	var Coord = __webpack_require__(2);
+	
+	function Board(dimX, dimY) {
+	  var DIMX = 20;
+	  var DIMY = 20;
+	  this.dimX = dimX || DIMX;
+	  this.dimY = dimY || DIMY;
+	  var pos = [10, 10];
+	  this.snake = new Snake(pos);
+	}
+	
+	Board.prototype.gameOver = function() {
+	  var snakeHead = this.snake.sements[0];
+	
+	  var offBoard = (
+	    (snakeHead[0] < 0) ||
+	    (snakeHead[0] >= this.dimX) ||
+	    (snakeHead[1] > 0) ||
+	    (snakeHead[1] >= this.dimY)
+	  );
+	
+	  var eatenSelf = false;
+	  var sortedSegments = this.snake.segments.sort();
+	  for (var i = 0; i < sortedSegments.length - 1; i++) {
+	    var coord = new Coord(sortedSegments[i]);
+	    if (coord.equals(sortedSegments[i + 1])) {
+	      eatenSelf = true;
+	    }
+	  }
+	
+	  return offBoard || eatenSelf;
+	};
+	
+	module.exports = Board;
 
 
 /***/ }
