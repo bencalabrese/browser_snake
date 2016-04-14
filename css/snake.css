@@ -20,6 +20,9 @@ body {
   text-align: center;
 }
 
+.snake-body {
+  background-color: green;
+}
 
 figure {
   border: 1px solid black;
