@@ -36,3 +36,7 @@ figure {
   box-sizing: border-box;
   float: left;
 }
+
+.apple {
+  background-color: red;
+}

@@ -38,6 +38,11 @@ SnakeView.prototype.eventBinding = function () {
 
 SnakeView.prototype.render = function() {
   $(".square").removeClass("snake-body");
+  $(".square").removeClass("apple");
+
+  var applePos = this.board.apple;
+  $(".square[data-pos='" + applePos + "']").addClass("apple");
+
 
   var segments = this.board.snake.segments;
   for (var i = 0; i < segments.length; i++) {
@@ -47,8 +52,17 @@ SnakeView.prototype.render = function() {
 };
 
 SnakeView.prototype.step = function () {
-  this.board.snake.move();
-  this.render();
+  setTimeout(function() {
+    this.board.snake.move();
+    this.board.checkApple();
+
+    if (this.board.gameOver()) {
+      alert("You died");
+    } else {
+      this.render();
+      this.step();
+    }
+  }.bind(this), 200);
 };
 
 

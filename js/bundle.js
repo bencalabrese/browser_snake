@@ -50,11 +50,7 @@
 	  var view = new SnakeView($("#snake-game"));
 	  view.setup();
 	  view.eventBinding();
-	  view.render();
-	
-	  setInterval(function(){
-	    view.step();
-	  }, 500);
+	  view.step();
 	});
 
 
@@ -67,6 +63,7 @@
 	function Snake(startingPosition) {
 	  this.direction = [0, 0];
 	  this.segments = [startingPosition];
+	  this.appleCount = 0;
 	}
 	
 	Snake.DIRECTIONS = {
@@ -77,9 +74,14 @@
 	};
 	
 	Snake.prototype.move = function() {
+	  this.appleCount -= 1;
+	
 	  var newSegment = (new Coord(this.segments[0])).plus(this.direction);
 	  this.segments.unshift(newSegment);
-	  this.segments.pop();
+	
+	  if (this.appleCount < 0) {
+	    this.segments.pop();
+	  }
 	};
 	
 	Snake.prototype.turn = function(newDirection) {
@@ -166,6 +168,11 @@
 	
 	SnakeView.prototype.render = function() {
 	  $(".square").removeClass("snake-body");
+	  $(".square").removeClass("apple");
+	
+	  var applePos = this.board.apple;
+	  $(".square[data-pos='" + applePos + "']").addClass("apple");
+	
 	
 	  var segments = this.board.snake.segments;
 	  for (var i = 0; i < segments.length; i++) {
@@ -175,8 +182,17 @@
 	};
 	
 	SnakeView.prototype.step = function () {
-	  this.board.snake.move();
-	  this.render();
+	  setTimeout(function() {
+	    this.board.snake.move();
+	    this.board.checkApple();
+	
+	    if (this.board.gameOver()) {
+	      alert("You died");
+	    } else {
+	      this.render();
+	      this.step();
+	    }
+	  }.bind(this), 200);
 	};
 	
 	
@@ -197,28 +213,64 @@
 	  this.dimY = dimY || DIMY;
 	  var pos = [10, 10];
 	  this.snake = new Snake(pos);
+	  this.addApple();
 	}
 	
+	Board.prototype.addApple = function() {
+	  var randX = Math.floor(Math.random()*this.dimX);
+	  var randY = Math.floor(Math.random()*this.dimY);
+	  var randCoord = new Coord([randX, randY]);
+	
+	  var segments = this.snake.segments;
+	  var noOverlap = false;
+	
+	  while (!noOverlap) {
+	    noOverlap = true;
+	
+	    for (var i = 0; i < segments; i++) {
+	      if (randCoord.equals(segments[i])) {
+	        noOverlap = false;
+	
+	        randX = Math.floor(Math.random()*this.dimX);
+	        randY = Math.floor(Math.random()*this.dimY);
+	        randCoord = new Coord([randX, randY]);
+	      }
+	    }
+	  }
+	
+	  this.apple = [randX, randY];
+	};
+	
 	Board.prototype.gameOver = function() {
-	  var snakeHead = this.snake.sements[0];
+	  var snakeHead = this.snake.segments[0];
 	
 	  var offBoard = (
 	    (snakeHead[0] < 0) ||
 	    (snakeHead[0] >= this.dimX) ||
-	    (snakeHead[1] > 0) ||
+	    (snakeHead[1] < 0) ||
 	    (snakeHead[1] >= this.dimY)
 	  );
 	
 	  var eatenSelf = false;
-	  var sortedSegments = this.snake.segments.sort();
-	  for (var i = 0; i < sortedSegments.length - 1; i++) {
-	    var coord = new Coord(sortedSegments[i]);
-	    if (coord.equals(sortedSegments[i + 1])) {
+	  var coord = new Coord(snakeHead);
+	
+	  for (var i = 1; i < this.snake.segments.length; i++) {
+	    if (coord.equals(this.snake.segments[i])) {
 	      eatenSelf = true;
 	    }
 	  }
 	
 	  return offBoard || eatenSelf;
+	};
+	
+	Board.prototype.checkApple = function () {
+	  if (new Coord(this.snake.segments[0]).equals(this.apple)) {
+	    this.snake.appleCount = 2;
+	    this.addApple();
+	    return true;
+	  }
+	
+	  return false;
 	};
 	
 	module.exports = Board;
